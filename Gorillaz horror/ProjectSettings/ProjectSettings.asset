@@ -40,7 +40,7 @@ PlayerSettings:
     width: 1
     height: 1
   m_SplashScreenLogos: []
-  m_VirtualRealitySplashScreen: {fileID: 2800000, guid: 624afa821b638be429a1756bd03b1950,
+  m_VirtualRealitySplashScreen: {fileID: 2800000, guid: d688ff9d9c582024482b9e806c7df0e7,
     type: 3}
   m_HolographicTrackingLossScreen: {fileID: 0}
   defaultScreenWidth: 1024
@@ -475,7 +475,7 @@ PlayerSettings:
   - m_BuildTarget: 
     m_Icons:
     - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: be4bf0a53fca6e54983d075ec56fe6c6, type: 3}
+      m_Icon: {fileID: 2800000, guid: d688ff9d9c582024482b9e806c7df0e7, type: 3}
       m_Width: 128
       m_Height: 128
       m_Kind: 0
@@ -679,6 +679,15 @@ PlayerSettings:
     m_Automatic: 1
   - m_BuildTarget: AndroidPlayer
     m_APIs: 0b00000008000000
+    m_Automatic: 1
+  - m_BuildTarget: MacStandaloneSupport
+    m_APIs: 10000000
+    m_Automatic: 1
+  - m_BuildTarget: LinuxStandaloneSupport
+    m_APIs: 1100000015000000
+    m_Automatic: 1
+  - m_BuildTarget: WindowsStandaloneSupport
+    m_APIs: 02000000
     m_Automatic: 1
   m_BuildTargetVRSettings: []
   m_DefaultShaderChunkSizeInMB: 16
@@ -972,6 +981,7 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Android: 1
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
   managedStrippingLevel:

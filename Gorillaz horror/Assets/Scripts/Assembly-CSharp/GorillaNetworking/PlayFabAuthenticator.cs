@@ -64,10 +64,10 @@ namespace GorillaNetworking
 
 		public void Awake()
 		{
-			PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime = "7cc482ca-07e3-4af0-8bd0-4a8c48bb881b";
-			PhotonNetwork.PhotonServerSettings.AppSettings.AppIdVoice = "c1610bb0-5a5c-4dc5-816a-3e069a6113b5";
-			PhotonNetwork.PhotonServerSettings.AppSettings.AppVersion = "pandastuds1";
-			PlayFabSettings.TitleId = "161E8F";
+			PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime = "7091c8cf-aaa7-4cb2-a38a-4fb47cf76398";
+			PhotonNetwork.PhotonServerSettings.AppSettings.AppIdVoice = "a39aca01-8525-429f-aa1c-e13b9c2b594c";
+			PhotonNetwork.PhotonServerSettings.AppSettings.AppVersion = "gnhstuds1";
+			PlayFabSettings.TitleId = "1B5B8F";
 			if (instance == null)
 			{
 				instance = this;
@@ -77,7 +77,7 @@ namespace GorillaNetworking
 				UnityEngine.Object.Destroy(base.gameObject);
 			}
 			byte[] payload = new byte[1];
-			PlayFabHttp.SimplePostCall("https://161E8F.playfabapi.com/", payload, delegate
+			PlayFabHttp.SimplePostCall("https://1B5B8F.playfabapi.com/", payload, delegate
 			{
 			}, delegate
 			{
