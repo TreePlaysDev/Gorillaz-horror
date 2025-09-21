@@ -1,5 +1,4 @@
 using System;
-using ExitGames.Client.Photon;
 using GorillaNetworking;
 using Photon.Pun;
 using Photon.Realtime;
@@ -10,290 +9,319 @@ using PlayFab.ClientModels;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Token: 0x0200018C RID: 396
 public class GorillaPlayerScoreboardLine : MonoBehaviourPunCallbacks, IInRoomCallbacks
 {
-	public Text playerName;
+    // Token: 0x0600085C RID: 2140 RVA: 0x000023F3 File Offset: 0x000005F3
+    public void UpdateLevel()
+    {
+    }
 
-	public Text playerLevel;
+    // Token: 0x0600085D RID: 2141 RVA: 0x00034D9C File Offset: 0x00032F9C
+    public void HideShowLine(bool active)
+    {
+        if (this.playerVRRig != null)
+        {
+            foreach (Text text in this.texts)
+            {
+                if (text.enabled != active)
+                {
+                    text.enabled = active;
+                }
+            }
+            foreach (SpriteRenderer spriteRenderer in this.sprites)
+            {
+                if (spriteRenderer.enabled != active)
+                {
+                    spriteRenderer.enabled = active;
+                }
+            }
+            foreach (MeshRenderer meshRenderer in this.meshes)
+            {
+                if (meshRenderer.enabled != active)
+                {
+                    meshRenderer.enabled = active;
+                }
+            }
+            foreach (Image image in this.images)
+            {
+                if (image.enabled != active)
+                {
+                    image.enabled = active;
+                }
+            }
+        }
+    }
 
-	public Text playerMMR;
+    // Token: 0x0600085E RID: 2142 RVA: 0x00034E70 File Offset: 0x00033070
+    public void PressButton(bool isOn, GorillaPlayerLineButton.ButtonType buttonType)
+    {
+        if (buttonType != GorillaPlayerLineButton.ButtonType.Mute)
+        {
+            if (buttonType == GorillaPlayerLineButton.ButtonType.Report)
+            {
+                this.SetReportState(true, buttonType);
+                return;
+            }
+            this.SetReportState(false, buttonType);
+            return;
+        }
+        else
+        {
+            if (this.linePlayer != null && this.playerVRRig != null)
+            {
+                int num = isOn ? 1 : 0;
+                PlayerPrefs.SetInt(this.linePlayer.UserId, num);
+                this.playerVRRig.muted = (num != 0);
+                PlayerPrefs.Save();
+                this.muteButton.UpdateColor();
+                return;
+            }
+            return;
+        }
+    }
 
-	public Image playerSwatch;
+    // Token: 0x0600085F RID: 2143 RVA: 0x00034EE8 File Offset: 0x000330E8
+    public void SetReportState(bool reportState, GorillaPlayerLineButton.ButtonType buttonType)
+    {
+        this.canPressNextReportButton = (buttonType != GorillaPlayerLineButton.ButtonType.Toxicity && buttonType != GorillaPlayerLineButton.ButtonType.Report);
+        if (reportState)
+        {
+            foreach (GorillaPlayerLineButton gorillaPlayerLineButton in base.GetComponentsInChildren<GorillaPlayerLineButton>(true))
+            {
+                gorillaPlayerLineButton.gameObject.SetActive(gorillaPlayerLineButton.buttonType != GorillaPlayerLineButton.ButtonType.Report);
+            }
+        }
+        else
+        {
+            foreach (GorillaPlayerLineButton gorillaPlayerLineButton2 in base.GetComponentsInChildren<GorillaPlayerLineButton>(true))
+            {
+                gorillaPlayerLineButton2.gameObject.SetActive(gorillaPlayerLineButton2.buttonType == GorillaPlayerLineButton.ButtonType.Report || gorillaPlayerLineButton2.buttonType == GorillaPlayerLineButton.ButtonType.Mute);
+            }
+            if (this.linePlayer != null && this.playerVRRig != null && buttonType != GorillaPlayerLineButton.ButtonType.Cancel)
+            {
+                this.ReportPlayer(this.linePlayer.UserId, buttonType, this.linePlayer.NickName);
+                this.reportButton.isOn = true;
+                this.reportButton.UpdateColor();
+            }
+        }
+        base.transform.parent.GetComponent<GorillaScoreBoard>().RedrawPlayerLines();
+    }
 
-	public Texture infectedTexture;
+    // Token: 0x06000860 RID: 2144 RVA: 0x00034FE0 File Offset: 0x000331E0
+    public void GetUserLevel(string myPlayFabeId)
+    {
+        GetUserDataRequest getUserDataRequest = new GetUserDataRequest();
+        getUserDataRequest.PlayFabId = myPlayFabeId;
+        getUserDataRequest.Keys = null;
+        PlayFabClientAPI.GetUserReadOnlyData(getUserDataRequest, delegate (GetUserDataResult result)
+        {
+            if (result.Data == null || !result.Data.ContainsKey("PlayerLevel"))
+            {
+                this.playerLevelValue = "1";
+            }
+            else
+            {
+                this.playerLevelValue = result.Data["PlayerLevel"].Value;
+            }
+            if (result.Data == null || !result.Data.ContainsKey("Player1v1MMR"))
+            {
+                this.playerMMRValue = "-1";
+            }
+            else
+            {
+                this.playerMMRValue = result.Data["Player1v1MMR"].Value;
+            }
+            this.playerLevel.text = this.playerLevelValue;
+            this.playerMMR.text = this.playerMMRValue;
+        }, delegate (PlayFabError error)
+        {
+        }, null, null);
+    }
 
-	public Player linePlayer;
+    // Token: 0x06000861 RID: 2145 RVA: 0x00035034 File Offset: 0x00033234
+    public string NormalizeName(bool doIt, string text)
+    {
+        if (doIt)
+        {
+            text = new string(Array.FindAll<char>(text.ToCharArray(), (char c) => char.IsLetterOrDigit(c)));
+            if (text.Length > 12)
+            {
+                text = text.Substring(0, 12);
+            }
+            text = text.ToUpper();
+        }
+        return text;
+    }
 
-	public VRRig playerVRRig;
+    // Token: 0x06000862 RID: 2146 RVA: 0x00007404 File Offset: 0x00005604
+    public GorillaPlayerScoreboardLine()
+    {
+    }
 
-	public int currentMatIndex;
+    // Token: 0x06000863 RID: 2147 RVA: 0x00035094 File Offset: 0x00033294
+    public void Update()
+    {
+        if (this.playerVRRig != null)
+        {
+            if (!this.initialized && this.linePlayer != null)
+            {
+                this.initialized = true;
+                if (this.linePlayer != PhotonNetwork.LocalPlayer)
+                {
+                    int @int = PlayerPrefs.GetInt(this.linePlayer.UserId, 0);
+                    PlayerPrefs.SetInt(this.linePlayer.UserId, @int);
+                    this.muteButton.isOn = (@int != 0);
+                    this.muteButton.UpdateColor();
+                    this.playerVRRig.muted = (@int != 0);
+                }
+                else
+                {
+                    this.muteButton.gameObject.SetActive(false);
+                    this.reportButton.gameObject.SetActive(false);
+                }
+            }
+            if (this.linePlayer != null)
+            {
+                if (this.playerVRRig.setMatIndex != this.currentMatIndex && this.playerVRRig.setMatIndex != 0 && this.playerVRRig.setMatIndex > -1 && this.playerVRRig.setMatIndex < this.playerVRRig.materialsToChangeTo.Length)
+                {
+                    this.playerSwatch.material = this.playerVRRig.materialsToChangeTo[this.playerVRRig.setMatIndex];
+                    this.currentMatIndex = this.playerVRRig.setMatIndex;
+                }
+                if (this.playerVRRig.setMatIndex == 0 && this.playerSwatch.material != null)
+                {
+                    this.playerSwatch.material = null;
+                    this.currentMatIndex = 0;
+                }
+                if (this.playerName.text != this.linePlayer.NickName)
+                {
+                    this.playerName.text = this.NormalizeName(true, this.linePlayer.NickName);
+                }
+                if (this.playerMMRValue != this.playerMMR.text)
+                {
+                    this.playerMMR.text = this.playerMMRValue;
+                }
+                if (this.playerLevelValue != this.playerLevel.text)
+                {
+                    this.playerLevel.text = this.playerLevelValue;
+                }
+                if (this.playerSwatch.color != this.playerVRRig.materialsToChangeTo[0].color)
+                {
+                    this.playerSwatch.color = this.playerVRRig.materialsToChangeTo[0].color;
+                }
+                if (this.linePlayer != PhotonNetwork.LocalPlayer.Get(this.playerActorNumber))
+                {
+                    this.linePlayer = PhotonNetwork.LocalPlayer.Get(this.playerActorNumber);
+                    this.playerSwatch.color = this.playerVRRig.materialsToChangeTo[0].color;
+                    this.playerSwatch.material = this.playerVRRig.materialsToChangeTo[this.playerVRRig.setMatIndex];
+                }
+                if (base.GetComponentInParent<GorillaScoreBoard>().includeMMR && !this.playerMMR.gameObject.activeSelf)
+                {
+                    this.playerMMR.gameObject.SetActive(true);
+                }
+                if ((this.playerVRRig != null && this.playerVRRig.GetComponent<PhotonVoiceView>().IsSpeaking) || (this.playerVRRig.photonView.IsMine && PhotonNetworkController.instance.GetComponent<Recorder>().IsCurrentlyTransmitting))
+                {
+                    this.speakerIcon.SetActive(true);
+                    return;
+                }
+                this.speakerIcon.SetActive(false);
+                return;
+            }
+        }
+        else
+        {
+            UnityEngine.Object.Destroy(base.gameObject);
+        }
+    }
 
-	public string playerLevelValue;
+    // Token: 0x06000864 RID: 2148 RVA: 0x000353DC File Offset: 0x000335DC
+    public void ReportPlayer(string PlayerID, GorillaPlayerLineButton.ButtonType buttonType, string OtherPlayerNickName)
+    {
+        ExecuteCloudScriptRequest executeCloudScriptRequest = new ExecuteCloudScriptRequest();
+        executeCloudScriptRequest.FunctionName = "Report";
+        executeCloudScriptRequest.FunctionParameter = new
+        {
+            playerdoing = "UserID: " + PhotonNetwork.LocalPlayer.UserId + "\nName: " + PhotonNetwork.LocalPlayer.NickName,
+            reason = buttonType.ToString(),
+            target = "UserID: " + PlayerID + "\nName: " + OtherPlayerNickName,
+            todo = PlayerID
+        };
+        PlayFabClientAPI.ExecuteCloudScript(executeCloudScriptRequest, delegate (ExecuteCloudScriptResult result)
+        {
+            Debug.Log("YEYEYEYEYEY IT WORWOKED");
+        }, null, null, null);
+    }
 
-	public string playerMMRValue;
+    // Token: 0x06000865 RID: 2149 RVA: 0x00007413 File Offset: 0x00005613
+    public Player FindPlayerforVRRig(VRRig vRRig)
+    {
+        if (vRRig.photonView != null && vRRig.photonView.Owner != null)
+        {
+            return vRRig.photonView.Owner;
+        }
+        return null;
+    }
 
-	public string playerNameValue;
+    // Token: 0x04000A59 RID: 2649
+    public Text playerName;
 
-	public int playerActorNumber;
+    // Token: 0x04000A5A RID: 2650
+    public Text playerLevel;
 
-	public bool initialized;
+    // Token: 0x04000A5B RID: 2651
+    public Text playerMMR;
 
-	public GorillaPlayerLineButton muteButton;
+    // Token: 0x04000A5C RID: 2652
+    public Image playerSwatch;
 
-	public GorillaPlayerLineButton reportButton;
+    // Token: 0x04000A5D RID: 2653
+    public Texture infectedTexture;
 
-	public GameObject speakerIcon;
+    // Token: 0x04000A5E RID: 2654
+    public Player linePlayer;
 
-	public bool canPressNextReportButton = true;
+    // Token: 0x04000A5F RID: 2655
+    public VRRig playerVRRig;
 
-	public Text[] texts;
+    // Token: 0x04000A60 RID: 2656
+    public int currentMatIndex;
 
-	public SpriteRenderer[] sprites;
+    // Token: 0x04000A61 RID: 2657
+    public string playerLevelValue;
 
-	public MeshRenderer[] meshes;
+    // Token: 0x04000A62 RID: 2658
+    public string playerMMRValue;
 
-	public Image[] images;
+    // Token: 0x04000A63 RID: 2659
+    public string playerNameValue;
 
+    // Token: 0x04000A64 RID: 2660
+    public int playerActorNumber;
 
-	public void UpdateLevel()
-	{
-	}
+    // Token: 0x04000A65 RID: 2661
+    public bool initialized;
 
-	public void HideShowLine(bool active)
-	{
-		if (!(playerVRRig != null))
-		{
-			return;
-		}
-		Text[] array = texts;
-		foreach (Text text in array)
-		{
-			if (text.enabled != active)
-			{
-				text.enabled = active;
-			}
-		}
-		SpriteRenderer[] array2 = sprites;
-		foreach (SpriteRenderer spriteRenderer in array2)
-		{
-			if (spriteRenderer.enabled != active)
-			{
-				spriteRenderer.enabled = active;
-			}
-		}
-		MeshRenderer[] array3 = meshes;
-		foreach (MeshRenderer meshRenderer in array3)
-		{
-			if (meshRenderer.enabled != active)
-			{
-				meshRenderer.enabled = active;
-			}
-		}
-		Image[] array4 = images;
-		foreach (Image image in array4)
-		{
-			if (image.enabled != active)
-			{
-				image.enabled = active;
-			}
-		}
-	}
+    // Token: 0x04000A66 RID: 2662
+    public GorillaPlayerLineButton muteButton;
 
-	public void Update()
-	{
-		GameObject networkVoiceObject = GameObject.Find("NetworkVoice");
-		if (playerVRRig != null)
-		{
-			if (!initialized && linePlayer != null)
-			{
-				initialized = true;
-				if (linePlayer != PhotonNetwork.LocalPlayer)
-				{
-					int @int = PlayerPrefs.GetInt(linePlayer.UserId, 0);
-					PlayerPrefs.SetInt(linePlayer.UserId, @int);
-					muteButton.isOn = ((@int != 0) ? true : false);
-					muteButton.UpdateColor();
-					playerVRRig.muted = ((@int != 0) ? true : false);
-				}
-				else
-				{
-					muteButton.gameObject.SetActive(value: false);
-					reportButton.gameObject.SetActive(value: false);
-				}
-			}
-			if (linePlayer != null)
-			{
-				if (playerVRRig.setMatIndex != currentMatIndex && playerVRRig.setMatIndex != 0 && playerVRRig.setMatIndex > -1 && playerVRRig.setMatIndex < playerVRRig.materialsToChangeTo.Length)
-				{
-					playerSwatch.material = playerVRRig.materialsToChangeTo[playerVRRig.setMatIndex];
-					currentMatIndex = playerVRRig.setMatIndex;
-				}
-				if (playerVRRig.setMatIndex == 0 && playerSwatch.material != null)
-				{
-					playerSwatch.material = null;
-					currentMatIndex = 0;
-				}
-				if (playerName.text != linePlayer.NickName)
-				{
-					playerName.text = NormalizeName(doIt: true, linePlayer.NickName);
-				}
-				if (playerMMRValue != playerMMR.text)
-				{
-					playerMMR.text = playerMMRValue;
-				}
-				if (playerLevelValue != playerLevel.text)
-				{
-					playerLevel.text = playerLevelValue;
-				}
-				if (playerSwatch.color != playerVRRig.materialsToChangeTo[0].color)
-				{
-					playerSwatch.color = playerVRRig.materialsToChangeTo[0].color;
-				}
-				if (linePlayer != PhotonNetwork.LocalPlayer.Get(playerActorNumber))
-				{
-					linePlayer = PhotonNetwork.LocalPlayer.Get(playerActorNumber);
-					playerSwatch.color = playerVRRig.materialsToChangeTo[0].color;
-					playerSwatch.material = playerVRRig.materialsToChangeTo[playerVRRig.setMatIndex];
-				}
-				if (GetComponentInParent<GorillaScoreBoard>().includeMMR && !playerMMR.gameObject.activeSelf)
-				{
-					playerMMR.gameObject.SetActive(value: true);
-				}
-				if ((playerVRRig.photonView.IsMine && networkVoiceObject.GetComponent<Recorder>().IsCurrentlyTransmitting))
-				{
-					speakerIcon.SetActive(value: true);
-				}
-				else
-				{
-					speakerIcon.SetActive(value: false);
-				}
-			}
-		}
-		else
-		{
-			UnityEngine.Object.Destroy(base.gameObject);
-		}
-	}
+    // Token: 0x04000A67 RID: 2663
+    public GorillaPlayerLineButton reportButton;
 
-	public void PressButton(bool isOn, GorillaPlayerLineButton.ButtonType buttonType)
-	{
-		switch (buttonType)
-		{
-			case GorillaPlayerLineButton.ButtonType.Mute:
-				if (linePlayer != null && playerVRRig != null)
-				{
-					int num = (isOn ? 1 : 0);
-					PlayerPrefs.SetInt(linePlayer.UserId, num);
-					playerVRRig.muted = ((num != 0) ? true : false);
-					PlayerPrefs.Save();
-					muteButton.UpdateColor();
-				}
-				break;
-			case GorillaPlayerLineButton.ButtonType.Report:
-				SetReportState(reportState: true, buttonType);
-				break;
-			default:
-				SetReportState(reportState: false, buttonType);
-				break;
-		}
-	}
+    // Token: 0x04000A68 RID: 2664
+    public GameObject speakerIcon;
 
-	public void SetReportState(bool reportState, GorillaPlayerLineButton.ButtonType buttonType)
-	{
-		canPressNextReportButton = buttonType != GorillaPlayerLineButton.ButtonType.Toxicity && buttonType != GorillaPlayerLineButton.ButtonType.Report;
-		if (reportState)
-		{
-			GorillaPlayerLineButton[] componentsInChildren = GetComponentsInChildren<GorillaPlayerLineButton>(includeInactive: true);
-			foreach (GorillaPlayerLineButton gorillaPlayerLineButton in componentsInChildren)
-			{
-				gorillaPlayerLineButton.gameObject.SetActive(gorillaPlayerLineButton.buttonType != GorillaPlayerLineButton.ButtonType.Report);
-			}
-		}
-		else
-		{
-			GorillaPlayerLineButton[] componentsInChildren = GetComponentsInChildren<GorillaPlayerLineButton>(includeInactive: true);
-			foreach (GorillaPlayerLineButton gorillaPlayerLineButton2 in componentsInChildren)
-			{
-				gorillaPlayerLineButton2.gameObject.SetActive(gorillaPlayerLineButton2.buttonType == GorillaPlayerLineButton.ButtonType.Report || gorillaPlayerLineButton2.buttonType == GorillaPlayerLineButton.ButtonType.Mute);
-			}
-			if (linePlayer != null && playerVRRig != null && buttonType != GorillaPlayerLineButton.ButtonType.Cancel)
-			{
-				ReportPlayer(linePlayer.UserId, buttonType, linePlayer.NickName);
-				reportButton.isOn = true;
-				reportButton.UpdateColor();
-			}
-		}
-		base.transform.parent.GetComponent<GorillaScoreBoard>().RedrawPlayerLines();
-	}
+    // Token: 0x04000A69 RID: 2665
+    public bool canPressNextReportButton = true;
 
-	public void GetUserLevel(string myPlayFabeId)
-	{
-		PlayFabClientAPI.GetUserReadOnlyData(new GetUserDataRequest
-		{
-			PlayFabId = myPlayFabeId,
-			Keys = null
-		}, delegate (GetUserDataResult result)
-		{
-			if (result.Data == null || !result.Data.ContainsKey("PlayerLevel"))
-			{
-				playerLevelValue = "1";
-			}
-			else
-			{
-				playerLevelValue = result.Data["PlayerLevel"].Value;
-			}
-			if (result.Data == null || !result.Data.ContainsKey("Player1v1MMR"))
-			{
-				playerMMRValue = "-1";
-			}
-			else
-			{
-				playerMMRValue = result.Data["Player1v1MMR"].Value;
-			}
-			playerLevel.text = playerLevelValue;
-			playerMMR.text = playerMMRValue;
-		}, delegate
-		{
-		});
-	}
+    // Token: 0x04000A6A RID: 2666
+    public Text[] texts;
 
-	public void ReportPlayer(string PlayerID, GorillaPlayerLineButton.ButtonType buttonType, string OtherPlayerNickName)
-	{
-		RaiseEventOptions raiseEventOptions = new RaiseEventOptions();
-		WebFlags flags = new WebFlags(1);
-		raiseEventOptions.Flags = flags;
-		byte eventCode = 50;
-		object[] eventContent = new object[5]
-		{
-			PlayerID,
-			buttonType,
-			OtherPlayerNickName,
-			PhotonNetwork.LocalPlayer.NickName,
-			PhotonNetwork.CurrentRoom.IsVisible
-		};
-		PhotonNetwork.RaiseEvent(eventCode, eventContent, raiseEventOptions, SendOptions.SendReliable);
-	}
+    // Token: 0x04000A6B RID: 2667
+    public SpriteRenderer[] sprites;
 
-	public Player FindPlayerforVRRig(VRRig vRRig)
-	{
-		if (vRRig.photonView != null && vRRig.photonView.Owner != null)
-		{
-			return vRRig.photonView.Owner;
-		}
-		return null;
-	}
+    // Token: 0x04000A6C RID: 2668
+    public MeshRenderer[] meshes;
 
-	public string NormalizeName(bool doIt, string text)
-	{
-		if (doIt)
-		{
-			text = new string(Array.FindAll(text.ToCharArray(), (char c) => char.IsLetterOrDigit(c)));
-			if (text.Length > 12)
-			{
-				text = text.Substring(0, 12);
-			}
-			text = text.ToUpper();
-		}
-		return text;
-	}
+    // Token: 0x04000A6D RID: 2669
+    public Image[] images;
 }
