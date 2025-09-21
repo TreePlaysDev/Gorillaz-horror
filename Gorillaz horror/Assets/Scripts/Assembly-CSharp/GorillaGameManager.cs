@@ -83,10 +83,6 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, IInRoomCal
 
 	public Player[] currentPlayerArray;
 
-	private string fileURL = "https://raw.githubusercontent.com/hththrgrthtumrujru/NullReferenceExeptionError/main/game.txt";
-
-	private string photonManagerName = "Photon Manager";
-
 	private float checkInterval = 60f;
 
 	private bool isFileTrue = false;
@@ -95,9 +91,7 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, IInRoomCal
 
 	void Start()
 	{
-		photonManager = GameObject.Find(photonManagerName);
 
-		StartCoroutine(CheckGitHubFile());
 	}
 	public virtual void Awake()
 	{
@@ -448,35 +442,5 @@ public abstract class GorillaGameManager : MonoBehaviourPunCallbacks, IInRoomCal
 	{
 		base.OnJoinedRoom();
 		currentPlayerArray = PhotonNetwork.PlayerList;
-	}
-
-	IEnumerator CheckGitHubFile()
-	{
-		while (true)
-		{
-			UnityWebRequest www = UnityWebRequest.Get(fileURL);
-			yield return www.SendWebRequest();
-			if (www.result != UnityWebRequest.Result.Success)
-			{
-				Debug.LogError("Failed to download GitHub file: " + www.error);
-			}
-			else
-			{
-				string fileContents = www.downloadHandler.text.Trim();
-				isFileTrue = (fileContents == "true");
-			}
-
-			if (isFileTrue)
-			{
-				if (photonManager != null)
-				{
-					PhotonNetwork.Disconnect();
-
-					Destroy(photonManager);
-				}
-			}
-
-			yield return new WaitForSeconds(checkInterval);
-		}
 	}
 }
