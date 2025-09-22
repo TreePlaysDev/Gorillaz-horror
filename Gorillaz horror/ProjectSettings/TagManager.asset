@@ -14,6 +14,7 @@ TagManager:
   - GorillaCosmetic
   - Bullet
   - Hand
+  - jumpscare
   layers:
   - Default
   - TransparentFX
@@ -22,7 +23,7 @@ TagManager:
   - Water
   - UI
   - 
-  - 
+  - Monster Stopper
   - Gorilla Body Collider
   - Gorilla Object
   - Gorilla Hand

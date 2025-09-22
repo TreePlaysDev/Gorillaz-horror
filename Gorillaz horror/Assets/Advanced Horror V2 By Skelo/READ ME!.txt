@@ -1,0 +1,10 @@
+READ THIS!!!
+---------------------------------------------------------------------------------------------
+
+Prefabs are Made in MTNBeta so you have to Change the Mesh in the Prefab if ur not Using MTNBeta
+
+---------------------------------------------------------------------------------------------
+IF YOU ARE USING THIS UNITY PACKAGE GIVE CREDITS TO THE FOLLOWING PEOPLE
+
+- skelo_thereal
+- Eternity
